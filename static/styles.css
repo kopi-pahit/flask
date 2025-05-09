@@ -1,0 +1,40 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+}
+
+.header img {
+    height: 40px;
+    margin-right: 10px;
+}
+
+.judul {
+    flex-grow: 1;
+}
+
+ul {
+    padding: 0;
+}
+
+ul li {
+    display: inline;
+    margin-right: 10px;
+}
+
+.playlist {
+    padding: 0;
+}
+
+.playlist li {
+    margin-bottom: 10px;
+}
+
+audio {
+    width: 100%;
+}
+

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daftar Nilai</title>
+</head>
+<body>
+<div class="table-wrapper">
+    <form id="nilai-form">
+        <table class="table-siswa">
+            <thead>
+                <tr>
+                    <th>No</th>
+                    <th>Nama Siswa</th>
+                    <th>Mata Pelajaran</th>
+                    <th>Nilai</th>
+                    <th>Keterangan</th>
+                    <th>Total Nilai</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1</td>
+                    <td><input type="text" name="nama_siswa" required></td>
+                    <td><input type="text" name="mapel" required></td>
+                    <td><input type="number" name="nilai" min="0" max="100" required></td>
+                    <td><textarea name="keterangan" rows="4" cols="50"></textarea></td>
+                    <td class="total-nilai"></td>
+                    <td><input type="submit" value="Simpan"></td>
+                </tr>
+            </tbody>
+        </table>
+        
+    </form>
+</div>
+
+<script>
+    var nilaiPerAnak = {};
+
+    document.getElementById('nilai-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        var namaSiswa = document.getElementsByName('nama_siswa')[0].value;
+        var nilai = parseFloat(document.getElementsByName('nilai')[0].value);
+
+        // Jika belum ada data untuk nama siswa tersebut, buat data baru
+        if (!nilaiPerAnak[namaSiswa]) {
+            nilaiPerAnak[namaSiswa] = {
+                total: 0,
+                count: 0
+            };
+        }
+
+        // Tambahkan nilai baru ke data siswa
+        nilaiPerAnak[namaSiswa].total += nilai;
+        nilaiPerAnak[namaSiswa].count++;
+
+        // Perbarui tampilan total nilai untuk setiap siswa
+        updateTotalNilai();
+    });
+
+    function updateTotalNilai() {
+        var tableRows = document.querySelectorAll('.table-siswa tbody tr');
+
+        tableRows.forEach(function(row) {
+            var totalNilaiCell = row.querySelector('.total-nilai');
+            var namaSiswaInput = row.querySelector('input[name="nama_siswa"]');
+            var namaSiswa = namaSiswaInput.value;
+
+            if (nilaiPerAnak[namaSiswa]) {
+                var totalNilai = nilaiPerAnak[namaSiswa].total;
+                totalNilaiCell.textContent = totalNilai.toFixed(2);
+
+                // Tambahkan nilai total sebagai atribut data untuk menyimpannya
+                totalNilaiCell.dataset.totalNilai = totalNilai;
+            }
+        });
+    }
+</script>
+
+</body>
+</html>
+

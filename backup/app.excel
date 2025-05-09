@@ -1,0 +1,192 @@
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify
+from openpyxl import load_workbook
+
+app = Flask(__name__)
+app.secret_key = "secret_key"
+excel_file = 'data.xlsx'
+sheet1_name = 'absen'
+sheet2_name = 'hafalan'
+
+def load_excel():
+    return load_workbook('data.xlsx')
+
+def is_logged_in():
+    return 'username' in session
+
+def check_credentials(username, password):
+    wb = load_excel()
+    sheet = wb['Users']
+    for row in sheet.iter_rows(values_only=True):
+        if row and row[0] == username and row[1] == password:
+            return True
+    return False
+
+def get_sheet_data(sheet_name):
+    workbook = load_excel()
+    sheet = workbook[sheet_name]
+    data = []
+    headers = [cell.value for cell in sheet[1]]
+    for row in sheet.iter_rows(min_row=2, values_only=True):
+        if any(row):
+            data.append(dict(zip(headers, row)))
+    return data
+
+@app.route('/')
+def index():
+    if is_logged_in():
+        return redirect(url_for('dashboard'))
+    return render_template('login.html')
+# Halaman login
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        if check_credentials(username, password):
+            session['username'] = username
+            return redirect(url_for('dashboard'))
+        else:
+            return render_template('login.html', error='Username atau password salah')
+    return render_template('login.html')
+
+# Halaman dashboard
+@app.route('/dashboard')
+def dashboard():  
+    if is_logged_in():
+ #data tabel pertama
+        workbook = load_workbook(excel_file)
+        absen = workbook[sheet1_name]
+        data_absen = sheet_to_dict(absen)
+  #data tabel kedua
+        workbook = load_workbook(excel_file)
+        hafalan = workbook[sheet2_name]
+        data_hafalan = sheet_to_dict(hafalan)
+        return render_template('dashboard.html', username=session['username'], data_absen=data_absen, data_hafalan=data_hafalan)
+    return redirect(url_for('login'))
+
+
+# Halaman profil
+@app.route('/profile')
+def profile():
+    if is_logged_in():
+        return render_template('profile.html', username=session['username'])
+    return redirect(url_for('login'))
+
+# Fungsi logout
+@app.route('/logout')
+def logout():
+    session.pop('username', None)
+    return redirect(url_for('index'))
+
+#end Log In
+
+@app.route('/view')
+def view():
+    return render_template('view.html')
+
+## start CRUD sheet1 atau pai
+@app.route('/absen')
+def absen():
+    workbook = load_workbook(excel_file)
+    absen = workbook[sheet1_name]
+    data = sheet_to_dict(absen)
+    return render_template('input1.html', data=data)
+# CRUD operations for Sheet1
+#add sheet1
+@app.route('/add_absen', methods=['GET', 'POST'])
+def add_absen():
+    if request.method == 'POST':
+        workbook = load_workbook(excel_file)
+        absen = workbook[sheet1_name]
+        new_data = [request.form['tgl'], request.form['nama'], request.form['klas'], request.form['absen']]
+        absen.append(new_data)
+        workbook.save(excel_file)
+        return redirect(url_for('absen'))
+    return render_template('input1.html')
+
+#edit sheet1
+@app.route('/edit_absen/<int:index>', methods=['POST', 'GET'])
+def edit_absen(index):
+    if request.method == 'GET':
+        workbook = load_workbook(excel_file)
+        absen = workbook[sheet1_name]
+        data = sheet_to_dict(absen)
+        return render_template('edit_absen.html', index=index, data=data[index])
+    elif request.method == 'POST':
+        workbook = load_workbook(excel_file)
+        absen = workbook[sheet1_name]
+        updated_data = [request.form['tgl'], request.form['nama'], request.form['klas'], request.form['absen']]
+        for i, value in enumerate(updated_data, start=1):
+            absen.cell(row=index + 2, column=i, value=value)
+        workbook.save(excel_file)
+        return redirect(url_for('dashboard'))
+#delete sheet1
+@app.route('/delete_absen/<int:index>')
+def delete_absen(index):
+    workbook = load_workbook(excel_file)
+    absen = workbook[sheet1_name]
+    absen.delete_rows(index + 2, amount=1)
+    workbook.save(excel_file)
+    return redirect(url_for('dashboard'))
+## End CRUD PAI
+
+# start CRUD ict
+@app.route('/hafalan')
+def hafalan():
+    workbook = load_workbook(excel_file)
+    hafalan = workbook[sheet2_name]
+    data = sheet_to_dict(hafalan)
+    return render_template('input2.html', data=data)
+
+#add ict
+@app.route('/add_hafalan', methods=['GET', 'POST'])
+def add_hafalan():
+    if request.method == 'POST':
+        workbook = load_workbook(excel_file)
+        hafalan = workbook[sheet2_name]
+        new_data = [request.form['tgl'], request.form['nama'], request.form['klas'], request.form['surat'], request.form['ayat'], request.form['ket']]
+        hafalan.append(new_data)
+        workbook.save(excel_file)
+        return redirect(url_for('dashboard'))
+    return render_template('input2.html')
+
+#edit ict
+@app.route('/edit_hafalan/<int:index>', methods=['POST', 'GET'])
+def edit_hafalan(index):
+    if request.method == 'GET':
+        workbook = load_workbook(excel_file)
+        hafalan = workbook[sheet2_name]
+        data = sheet_to_dict(hafalan)
+        return render_template('edit_hafalan.html', index=index, data=data[index])
+    elif request.method == 'POST':
+        workbook = load_workbook(excel_file)
+        hafalan = workbook[sheet2_name]
+        updated_data = [request.form['tgl'], request.form['nama'], request.form['klas'], request.form['surat'], request.form['ayat'], request.form['ket']]
+        for i, value in enumerate(updated_data, start=1):
+            hafalan.cell(row=index + 2, column=i, value=value)
+        workbook.save(excel_file)
+        return redirect(url_for('dashboard'))
+
+#delete ict
+@app.route('/delete_hafalan/<int:index>')
+def delete_hafalan(index):
+    workbook = load_workbook(excel_file)
+    hafalan = workbook[sheet2_name]
+    hafalan.delete_rows(index + 2, amount=1)
+    workbook.save(excel_file)
+    return redirect(url_for('dashboard'))
+## End CRUD ict
+
+def sheet_to_dict(sheet):
+    data = []
+    headers = [cell.value for cell in sheet[1]]
+    for row in sheet.iter_rows(min_row=2, values_only=True):
+        # Check if the row is all None (empty)
+        if not all(cell is None for cell in row):
+            data.append(dict(zip(headers, row)))
+    return data
+
+
+if __name__ == '__main__':
+    app.run(debug=True)
+

@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daftar Hadir</title>
+    <style>
+        html {
+   font-size: 15px;
+}
+
+body {
+    font-family: sans-serif;
+    font-size: 1em;
+    line-height: 1.4;
+    color: #444;
+}
+
+main {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.table-wrapper {
+    overflow: auto;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.table-siswa, .table-date {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+.table-siswa td {
+    border: 1px solid silver;
+    position: relative;
+    padding: 5px;
+}
+
+.td-date .date {
+    display: inline-block;
+    width: 25px;
+}
+
+.label-checkbox {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 100%;
+    display: block;
+    vertical-align: middle;
+    background: #cecece;
+}
+
+.label-checkbox:hover {
+    background: #bff8ff;
+}
+
+.label-checkbox input {
+    margin: 0;
+    -webkit-appearance: none;
+    height: 100%;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    width: 100%;
+    border: 0;
+    cursor: pointer;
+    outline: none;
+}
+
+.label-checkbox.active, .label-checkbox.active input, .label-checkbox input:checked {
+    background: #2196F3;
+}
+
+.label-checkbox.active::before {
+    content: "✓";
+    display: block;
+    position: absolute;
+    z-index: 5;
+    color: #fff;
+    top: 15%;
+    left: 35%;
+}
+
+
+.box-color {
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    vertical-align: middle;
+}
+
+.box-color.true {
+   background: #2196F3;
+}
+
+.box-color.false {
+   background: #cecece;
+}
+    </style>
+</head>
+<body>
+
+<main>
+
+<h2 class="text-center">
+    Daftar Hadir ...<br>
+    Bulan... Tahun ... 
+</h2>
+
+<div class="table-wrapper">
+
+    <table class="table-siswa">
+        <thead>
+            <tr>
+                <td rowspan="2">No</td>
+                <td rowspan="2">Nama</td>
+                <td rowspan="2">L/P</td>
+                <td rowspan="2">ID</td>
+                <td colspan="31" class="text-center">Tanggal</td>
+                <td colspan="2">Jumlah</td>
+            </tr>
+            <tr class="table-row-head">
+              <td>Hadir</td>
+              <td>Tidak Hadir</td>
+            </tr>
+          </thead>
+          <tbody class="table-body-content">
+            <tr data-id="001">
+                <td>1</td>
+                <td>Adi</td>
+                <td>L</td>
+                <td>001</td>
+            </tr>
+            <tr data-id="002">
+                <td>2</td>
+                <td>Budi</td>
+                <td>L</td>
+                <td>002</td>
+            </tr>
+            <tr data-id="003">
+                <td>3</td>
+                <td>Wati</td>
+                <td>P</td>
+                <td>003</td>
+            </tr>
+        </tbody>
+    </table>
+
+
+</div>
+
+<h2>Keterangan</h2>
+
+<ul>
+    <li><span class="box-color true"></span> Hadir</li>
+    <li><span class="box-color false"></span> Tidak Hadir</li>
+</ul>
+
+  
+</main>
+
+<script src="{{ url_for('static', filename='./jquery.min.js') }}"></script>
+<script>
+    $(document).ready(function(){
+
+        var tableDate = "";
+        var tableContent =  "";
+        var $td =  "";
+
+        var $label ="<label class='label-checkbox'><input type='checkbox'/></label>";
+
+        for(var i=1; i<=31; i++){
+            tableDate += "<td class='td-date text-center'><b class='date'>"+ i +"</b></td>";
+        }
+
+        $( tableDate ).prependTo( ".table-row-head" );
+
+
+        for(var i=1; i<=31; i++){
+            tableContent += "<td class='text-center' data-date='"+ i +"'>"+ $label +"</td>";
+        }
+
+        $( tableContent ).appendTo( ".table-body-content tr" );
+
+        for(var td=1; td<=2; td++){
+            $td += "<td class='text-center' data-info='"+ td +"'</td>";
+        }
+
+        $( $td ).insertAfter( ".table-body-content td[data-date='31']" );
+
+
+        $( document ).on( "change", ".label-checkbox", function(){
+            $( this ).toggleClass( "active" );
+            checkData();
+        });
+
+
+    });
+
+    function checkData(){
+        $( ".label-checkbox" ).each(function(){
+            var $parents  = $( this ).parents( "tr" );
+            var $checked      = $parents.find( "input:checked" ).length;
+            var $no_checked   = $parents.find( "input" ).length;
+            var $true = $checked;
+            var $false = [ $no_checked - $checked];
+
+            $parents.find( "[data-info='1']" ).html( $true );
+            $parents.find( "[data-info='2']" ).html( $false );
+        });
+    }
+
+    $( document ).ready(function(){
+        checkData();
+    });
+</script>
+
+</body>
+</html>
+
